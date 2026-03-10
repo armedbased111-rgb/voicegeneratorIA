@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voicegeneratoria"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "elevenlabs",
+    "python-dotenv",
+    "typer",
+]
+
+[project.scripts]
+voice = "voice:app"
+
+[tool.setuptools]
+py-modules = ["voice"]
