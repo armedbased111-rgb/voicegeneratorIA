@@ -1,7 +1,7 @@
 {
-  "name": "voicegeneratoria",
-  "version": "0.1.0",
-  "description": "Text-to-Speech GUI pour la prod rap",
+  "name": "echo",
+  "version": "0.2.0",
+  "description": "ECHO — Voice generator for rap production",
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -12,9 +12,10 @@
     "dist:win": "npm run build && electron-builder --win"
   },
   "build": {
-    "appId": "com.triplesept.voicegeneratoria",
-    "productName": "VoiceGeneratorIA",
+    "appId": "com.triplesept.echo",
+    "productName": "ECHO",
     "copyright": "Copyright © 2026",
+    "icon": "build/icon",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -31,7 +32,7 @@
       ]
     },
     "dmg": {
-      "title": "VoiceGeneratorIA",
+      "title": "ECHO",
       "window": { "width": 540, "height": 380 }
     },
     "win": {

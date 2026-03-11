@@ -5,7 +5,7 @@ export default function TitleBar({ showHistory, onToggleHistory }) {
       style={{ WebkitAppRegion: 'drag' }}
     >
       <span className="text-[10px] font-medium text-ink/40 tracking-widest uppercase">
-        VoiceGeneratorIA
+        ECHO
       </span>
       <div
         className="flex items-center gap-3"
