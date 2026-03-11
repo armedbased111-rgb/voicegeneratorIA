@@ -6,6 +6,7 @@ import PresetPills from './components/PresetPills'
 import FilenameInput from './components/FilenameInput'
 import HistoryPanel from './components/HistoryPanel'
 import PresetEditor from './components/PresetEditor'
+import ApiKeyModal from './components/ApiKeyModal'
 import { useAudioPlayer } from './hooks/useAudioPlayer'
 
 export default function App() {
@@ -18,10 +19,12 @@ export default function App() {
   const [presets, setPresets] = useState({})
   const [showHistory, setShowHistory] = useState(false)
   const [editingPreset, setEditingPreset] = useState(null)
+  const [showApiKey, setShowApiKey] = useState(false)
 
   const { play, stop, playing, freqData, volumeRef } = useAudioPlayer()
 
   useEffect(() => {
+    window.api.getApiKey().then((res) => { if (!res.hasKey) setShowApiKey(true) })
     window.api.getQuota().then((res) => { if (res.ok) setQuota(res) })
     loadPresets()
   }, [])
@@ -49,6 +52,9 @@ export default function App() {
     } else {
       const msg = res.error?.split('\n').pop()?.trim() || 'generation failed'
       setStatus({ state: 'error', message: msg })
+      if (res.error?.toLowerCase().includes('api_key') || res.error?.toLowerCase().includes('api key') || res.error?.toLowerCase().includes('unauthorized')) {
+        setShowApiKey(true)
+      }
     }
   }
 
@@ -76,7 +82,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-[#F3F3F3] font-geist relative">
-      <TitleBar showHistory={showHistory} onToggleHistory={() => setShowHistory(!showHistory)} />
+      <TitleBar showHistory={showHistory} onToggleHistory={() => setShowHistory(!showHistory)} onSettings={() => setShowApiKey(true)} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {showHistory ? (
@@ -120,6 +126,13 @@ export default function App() {
           </>
         )}
       </div>
+
+      {showApiKey && (
+        <ApiKeyModal onSaved={() => {
+          setShowApiKey(false)
+          window.api.getQuota().then((res) => { if (res.ok) setQuota(res) })
+        }} />
+      )}
 
       {editingPreset !== null && (
         <PresetEditor

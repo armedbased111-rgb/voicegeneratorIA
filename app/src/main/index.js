@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import { spawn } from 'child_process'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 
 // In dev:  call python + voice.py from repo root
 // In prod: call the PyInstaller standalone binary (voice / voice.exe)
@@ -9,6 +9,7 @@ const IS_WIN = process.platform === 'win32'
 const DEV_ROOT = join(app.getAppPath(), '..')
 const RES_ROOT = process.resourcesPath // only valid when packaged
 
+const CONFIG_JSON  = join(app.getPath('userData'), 'config.json')
 const PRESETS_JSON = app.isPackaged ? join(RES_ROOT, 'presets.json') : join(DEV_ROOT, 'presets.json')
 const OUTPUT_DIR   = app.isPackaged ? join(app.getPath('userData'), 'output') : join(DEV_ROOT, 'output')
 const HISTORY_LOG  = app.isPackaged ? join(app.getPath('userData'), 'history.log') : join(DEV_ROOT, 'history.log')
@@ -47,11 +48,21 @@ function createWindow() {
   }
 }
 
+function readConfig() {
+  try { return JSON.parse(readFileSync(CONFIG_JSON, 'utf-8')) } catch { return {} }
+}
+function writeConfig(data) {
+  mkdirSync(app.getPath('userData'), { recursive: true })
+  writeFileSync(CONFIG_JSON, JSON.stringify(data, null, 2))
+}
+
 function runPython(args) {
+  const cfg = readConfig()
+  const apiKey = cfg.apiKey || process.env.ELEVENLABS_API_KEY || ''
   return new Promise((resolve) => {
     const py = spawn(VOICE_EXEC, [...VOICE_ARGS_PREFIX, ...args], {
       cwd: CWD,
-      env: { ...process.env, OUTPUT_DIR },
+      env: { ...process.env, OUTPUT_DIR, ELEVENLABS_API_KEY: apiKey },
     })
 
     let stdout = ''
@@ -215,6 +226,20 @@ ipcMain.handle('play-file', async (_, filePath) => {
   } else {
     spawn('mpv', ['--no-video', absPath], { detached: true }).unref()
   }
+  return { ok: true }
+})
+
+// ── API Key ───────────────────────────────────────────────────────────────────
+
+ipcMain.handle('get-api-key', () => {
+  const cfg = readConfig()
+  return { ok: true, hasKey: !!(cfg.apiKey || process.env.ELEVENLABS_API_KEY) }
+})
+
+ipcMain.handle('set-api-key', (_, key) => {
+  const cfg = readConfig()
+  cfg.apiKey = key.trim()
+  writeConfig(cfg)
   return { ok: true }
 })
 

@@ -1,4 +1,4 @@
-export default function TitleBar({ showHistory, onToggleHistory }) {
+export default function TitleBar({ showHistory, onToggleHistory, onSettings }) {
   return (
     <div
       className="flex items-center justify-between px-4 h-11 flex-shrink-0"
@@ -11,6 +11,13 @@ export default function TitleBar({ showHistory, onToggleHistory }) {
         className="flex items-center gap-3"
         style={{ WebkitAppRegion: 'no-drag' }}
       >
+        <button
+          onClick={onSettings}
+          className="text-[10px] font-medium tracking-widest uppercase text-muted/40 hover:text-ink/40 transition-colors"
+          title="API Key settings"
+        >
+          key
+        </button>
         <button
           onClick={onToggleHistory}
           className={`text-[10px] font-medium tracking-widest uppercase transition-colors ${
