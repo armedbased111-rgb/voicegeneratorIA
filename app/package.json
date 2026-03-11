@@ -29,20 +29,24 @@
       "out/renderer/index.html"
     ],
     "extraResources": [
-      { "from": "../voice.py",     "to": "voice.py" },
-      { "from": "../presets.json", "to": "presets.json" },
-      { "from": "../.venv",        "to": ".venv" }
+      { "from": "../presets.json", "to": "presets.json" }
     ],
     "mac": {
       "category": "public.app-category.music",
-      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }]
+      "target": [{ "target": "dmg", "arch": ["arm64"] }],
+      "extraResources": [
+        { "from": "../dist-bin/voice", "to": "voice" }
+      ]
     },
     "dmg": {
       "title": "VoiceGeneratorIA",
       "window": { "width": 540, "height": 380 }
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }]
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "extraResources": [
+        { "from": "../dist-bin/voice.exe", "to": "voice.exe" }
+      ]
     },
     "nsis": {
       "oneClick": false,

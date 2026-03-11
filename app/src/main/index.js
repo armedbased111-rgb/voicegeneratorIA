@@ -3,21 +3,26 @@ import { join } from 'path'
 import { spawn } from 'child_process'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 
-// In dev:  PROJECT_ROOT = repo root
-// In prod: static assets in process.resourcesPath, writable data in userData
+// In dev:  call python + voice.py from repo root
+// In prod: call the PyInstaller standalone binary (voice / voice.exe)
 const IS_WIN = process.platform === 'win32'
 const DEV_ROOT = join(app.getAppPath(), '..')
 const RES_ROOT = process.resourcesPath // only valid when packaged
 
-const VOICE_PY    = app.isPackaged ? join(RES_ROOT, 'voice.py')    : join(DEV_ROOT, 'voice.py')
-const PRESETS_JSON= app.isPackaged ? join(RES_ROOT, 'presets.json'): join(DEV_ROOT, 'presets.json')
-const OUTPUT_DIR  = app.isPackaged ? join(app.getPath('userData'), 'output') : join(DEV_ROOT, 'output')
-const HISTORY_LOG = app.isPackaged ? join(app.getPath('userData'), 'history.log') : join(DEV_ROOT, 'history.log')
-const CWD         = app.isPackaged ? RES_ROOT : DEV_ROOT
+const PRESETS_JSON = app.isPackaged ? join(RES_ROOT, 'presets.json') : join(DEV_ROOT, 'presets.json')
+const OUTPUT_DIR   = app.isPackaged ? join(app.getPath('userData'), 'output') : join(DEV_ROOT, 'output')
+const HISTORY_LOG  = app.isPackaged ? join(app.getPath('userData'), 'history.log') : join(DEV_ROOT, 'history.log')
+const CWD          = app.isPackaged ? RES_ROOT : DEV_ROOT
 
-const PYTHON = app.isPackaged
-  ? join(RES_ROOT, '.venv', IS_WIN ? join('Scripts', 'python.exe') : join('bin', 'python3'))
+// Packaged: run the PyInstaller binary directly (no Python needed)
+// Dev:      run python voice.py via .venv
+const VOICE_EXEC = app.isPackaged
+  ? join(RES_ROOT, IS_WIN ? 'voice.exe' : 'voice')
   : join(DEV_ROOT, '.venv', IS_WIN ? join('Scripts', 'python.exe') : join('bin', 'python3'))
+
+const VOICE_ARGS_PREFIX = app.isPackaged
+  ? []
+  : [join(DEV_ROOT, 'voice.py')]
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -44,7 +49,7 @@ function createWindow() {
 
 function runPython(args) {
   return new Promise((resolve) => {
-    const py = spawn(PYTHON, [VOICE_PY, ...args], {
+    const py = spawn(VOICE_EXEC, [...VOICE_ARGS_PREFIX, ...args], {
       cwd: CWD,
       env: { ...process.env, OUTPUT_DIR },
     })

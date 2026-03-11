@@ -23,11 +23,18 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Create Python venv (macOS)
+      - name: Install Python dependencies + PyInstaller
         run: |
           python3 -m venv .venv
           .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install elevenlabs typer python-dotenv
+          .venv/bin/pip install elevenlabs typer python-dotenv pyinstaller
+
+      - name: Build voice binary (macOS)
+        run: |
+          .venv/bin/pyinstaller --onefile --name voice voice.py
+          mkdir -p dist-bin
+          cp dist/voice dist-bin/voice
+          chmod +x dist-bin/voice
 
       - name: Create .env
         run: echo "ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}" > .env
@@ -41,7 +48,7 @@ jobs:
         run: npm run dist:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false   # skip macOS code signing
+          CSC_IDENTITY_AUTO_DISCOVERY: false
 
       - uses: actions/upload-artifact@v4
         with:
@@ -65,12 +72,19 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Create Python venv (Windows)
+      - name: Install Python dependencies + PyInstaller
         shell: cmd
         run: |
           python -m venv .venv
           .venv\Scripts\pip install --upgrade pip
-          .venv\Scripts\pip install elevenlabs typer python-dotenv
+          .venv\Scripts\pip install elevenlabs typer python-dotenv pyinstaller
+
+      - name: Build voice binary (Windows)
+        shell: cmd
+        run: |
+          .venv\Scripts\pyinstaller --onefile --name voice voice.py
+          mkdir dist-bin
+          copy dist\voice.exe dist-bin\voice.exe
 
       - name: Create .env
         shell: bash
