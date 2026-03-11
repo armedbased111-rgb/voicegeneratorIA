@@ -6,3 +6,6 @@ __pycache__/
 *.pyc
 .DS_Store
 *.egg-info/
+app/node_modules/
+app/dist/
+app/out/
