@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('api', {
   getApiKey: () => ipcRenderer.invoke('get-api-key'),
   setApiKey: (key) => ipcRenderer.invoke('set-api-key', key),
   verifyKey: (key) => ipcRenderer.invoke('verify-key', key),
+  setTheme: (theme) => ipcRenderer.invoke('set-theme', theme),
   minimize: () => ipcRenderer.send('window-minimize'),
   close: () => ipcRenderer.send('window-close'),
   openMain: () => ipcRenderer.send('open-main-window'),

@@ -14,6 +14,7 @@ export function useTheme() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
     localStorage.setItem(LS_KEY, dark ? 'dark' : 'light')
+    window.api?.setTheme?.(dark ? 'dark' : 'light')
   }, [dark])
 
   // Sync between main window and mini tray

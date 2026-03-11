@@ -16,6 +16,10 @@ let mainWin = null
 let miniWin = null
 let tray    = null
 
+function getThemeBg() {
+  try { return readConfig().theme === 'dark' ? '#111111' : '#F3F3F3' } catch { return '#F3F3F3' }
+}
+
 function createWindow() {
   mainWin = new BrowserWindow({
     width: 500,
@@ -30,7 +34,7 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false,
     },
-    backgroundColor: '#F3F3F3',
+    backgroundColor: getThemeBg(),
   })
 
   if (process.env['ELECTRON_RENDERER_URL']) {
@@ -97,7 +101,7 @@ function createMiniWin() {
       nodeIntegration: false,
       sandbox: false,
     },
-    backgroundColor: '#F3F3F3',
+    backgroundColor: getThemeBg(),
   })
 
   if (process.env['ELECTRON_RENDERER_URL']) {
@@ -318,6 +322,13 @@ ipcMain.handle('get-api-key', () => {
 ipcMain.handle('set-api-key', (_, key) => {
   const cfg = readConfig()
   cfg.apiKey = key.trim()
+  writeConfig(cfg)
+  return { ok: true }
+})
+
+ipcMain.handle('set-theme', (_, theme) => {
+  const cfg = readConfig()
+  cfg.theme = theme
   writeConfig(cfg)
   return { ok: true }
 })
