@@ -42,17 +42,14 @@ export function useAudioPlayer() {
 
     try {
       const absPath = await window.api.resolvePath(filePath)
-      const fileUrl = absPath.startsWith('/')
-        ? `file://${absPath}`
-        : `file:///${absPath.replace(/\\/g, '/')}`
 
-      // fetch + decodeAudioData — no CORS, no autoplay restriction
+      // Read via IPC — bypasses file:// CORS when renderer runs on http://localhost (dev)
       const ctx = new AudioContext()
       ctxRef.current = ctx
       await ctx.resume()
 
-      const response    = await fetch(fileUrl)
-      const arrayBuffer = await response.arrayBuffer()
+      const uint8 = await window.api.readFile(absPath)
+      const arrayBuffer = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength)
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
 
       const source  = ctx.createBufferSource()

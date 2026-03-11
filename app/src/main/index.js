@@ -1,29 +1,16 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import { spawn } from 'child_process'
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
-
-// In dev:  call python + voice.py from repo root
-// In prod: call the PyInstaller standalone binary (voice / voice.exe)
-const IS_WIN = process.platform === 'win32'
-const DEV_ROOT = join(app.getAppPath(), '..')
-const RES_ROOT = process.resourcesPath // only valid when packaged
+import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync, createWriteStream } from 'fs'
+import { pipeline } from 'stream/promises'
+import { ElevenLabsClient } from 'elevenlabs'
 
 const CONFIG_JSON  = join(app.getPath('userData'), 'config.json')
+const DEV_ROOT     = join(app.getAppPath(), '..')
+const RES_ROOT     = process.resourcesPath
 const PRESETS_JSON = app.isPackaged ? join(RES_ROOT, 'presets.json') : join(DEV_ROOT, 'presets.json')
 const OUTPUT_DIR   = app.isPackaged ? join(app.getPath('userData'), 'output') : join(DEV_ROOT, 'output')
 const HISTORY_LOG  = app.isPackaged ? join(app.getPath('userData'), 'history.log') : join(DEV_ROOT, 'history.log')
-const CWD          = app.isPackaged ? RES_ROOT : DEV_ROOT
-
-// Packaged: run the PyInstaller binary directly (no Python needed)
-// Dev:      run python voice.py via .venv
-const VOICE_EXEC = app.isPackaged
-  ? join(RES_ROOT, IS_WIN ? 'voice.exe' : 'voice')
-  : join(DEV_ROOT, '.venv', IS_WIN ? join('Scripts', 'python.exe') : join('bin', 'python3'))
-
-const VOICE_ARGS_PREFIX = app.isPackaged
-  ? []
-  : [join(DEV_ROOT, 'voice.py')]
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -56,65 +43,67 @@ function writeConfig(data) {
   writeFileSync(CONFIG_JSON, JSON.stringify(data, null, 2))
 }
 
-function runPython(args) {
+function getClient() {
   const cfg = readConfig()
   const apiKey = cfg.apiKey || process.env.ELEVENLABS_API_KEY || ''
-  return new Promise((resolve) => {
-    const py = spawn(VOICE_EXEC, [...VOICE_ARGS_PREFIX, ...args], {
-      cwd: CWD,
-      env: { ...process.env, OUTPUT_DIR, ELEVENLABS_API_KEY: apiKey },
-    })
-
-    let stdout = ''
-    let stderr = ''
-
-    py.stdout.on('data', (d) => (stdout += d.toString()))
-    py.stderr.on('data', (d) => (stderr += d.toString()))
-
-    py.on('close', (code) => resolve({ code, stdout, stderr }))
-  })
+  if (!apiKey) throw new Error('ELEVENLABS_API_KEY manquante')
+  return new ElevenLabsClient({ apiKey })
 }
 
 // ── Generate ──────────────────────────────────────────────────────────────────
 
 ipcMain.handle('generate', async (_, { text, preset, name }) => {
-  const args = ['generate', text]
-  if (preset) args.push('--preset', preset)
-  if (name) args.push('--name', name)
+  try {
+    const client = getClient()
 
-  const { code, stdout, stderr } = await runPython(args)
+    let voiceId = 'JBFqnCBsd6RMkjVDRZzb', stability = 0.40, similarity = 0.05, style = 0.05, speed = 1.0
+    if (preset) {
+      try {
+        const presets = JSON.parse(readFileSync(PRESETS_JSON, 'utf-8'))
+        const p = presets[preset] || {}
+        voiceId    = p.voice_id   || voiceId
+        stability  = p.stability  ?? stability
+        similarity = p.similarity ?? similarity
+        style      = p.style      ?? style
+        speed      = p.speed      ?? speed
+      } catch { /* use defaults */ }
+    }
 
-  if (code !== 0) {
-    return { ok: false, error: (stderr || stdout).trim() }
+    mkdirSync(OUTPUT_DIR, { recursive: true })
+    const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 15)
+    const slug = text.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 30)
+    const outputPath = join(OUTPUT_DIR, `${name || timestamp + '_' + slug}.mp3`)
+
+    const audio = await client.textToSpeech.convert(voiceId, {
+      text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: { stability, similarity_boost: similarity, style, use_speaker_boost: false, speed },
+    })
+
+    await pipeline(audio, createWriteStream(outputPath))
+
+    const ts = new Date().toISOString()
+    appendFileSync(HISTORY_LOG, `${ts} | voice=${voiceId} | preset=${preset || ''} | file=${outputPath} | text=${text}\n`)
+
+    return { ok: true, path: outputPath }
+  } catch (e) {
+    return { ok: false, error: e.message }
   }
-
-  const match = stdout.match(/\[OK\]\s+(.+\.mp3)/)
-  const path = match ? match[1].trim() : null
-  return { ok: true, path }
 })
 
 // ── Quota ─────────────────────────────────────────────────────────────────────
 
 ipcMain.handle('get-quota', async () => {
-  const { code, stdout, stderr } = await runPython(['quota'])
-
-  if (code !== 0) {
-    return { ok: false, error: (stderr || stdout).trim() }
+  try {
+    const client = getClient()
+    const user = await client.user.get()
+    const sub = user.subscription
+    const used = sub.character_count
+    const limit = sub.character_limit
+    return { ok: true, used, limit, remaining: limit - used, tier: sub.tier }
+  } catch (e) {
+    return { ok: false, error: e.message }
   }
-
-  const usedMatch = stdout.match(/Utilisés\s*:\s*([\d,\s]+)\s*\/\s*([\d,\s]+)/)
-  const remainMatch = stdout.match(/Restants\s*:\s*([\d,\s]+)/)
-  const tierMatch = stdout.match(/Plan\s*:\s*(\S+)/)
-
-  if (!usedMatch) return { ok: false, error: 'Failed to parse quota' }
-
-  const parse = (s) => parseInt(s.replace(/[,\s]/g, ''))
-  const used = parse(usedMatch[1])
-  const limit = parse(usedMatch[2])
-  const remaining = remainMatch ? parse(remainMatch[1]) : limit - used
-  const tier = tierMatch ? tierMatch[1] : 'unknown'
-
-  return { ok: true, used, limit, remaining, tier }
 })
 
 // ── Presets ───────────────────────────────────────────────────────────────────
@@ -158,21 +147,21 @@ ipcMain.handle('get-history', async () => {
     const content = readFileSync(HISTORY_LOG, 'utf-8')
     const lines = content.trim().split('\n').filter(Boolean).reverse().slice(0, 50)
     const entries = lines.map((line) => {
-      const tsMatch = line.match(/^([^|]+)\|/)
-      const voiceMatch = line.match(/voice=([^|]+)\|/)
+      const tsMatch     = line.match(/^([^|]+)\|/)
+      const voiceMatch  = line.match(/voice=([^|]+)\|/)
       const presetMatch = line.match(/preset=([^|]+)\|/)
-      const fileMatch = line.match(/file=([^|]+)\|/)
-      const textMatch = line.match(/\| text=(.+)$/)
+      const fileMatch   = line.match(/file=([^|]+)\|/)
+      const textMatch   = line.match(/\| text=(.+)$/)
       return {
-        timestamp: tsMatch ? tsMatch[1].trim() : '',
-        voice: voiceMatch ? voiceMatch[1].trim() : '',
-        preset: presetMatch ? presetMatch[1].trim() : null,
-        file: fileMatch ? fileMatch[1].trim() : '',
-        text: textMatch ? textMatch[1].trim() : '',
+        timestamp: tsMatch     ? tsMatch[1].trim()     : '',
+        voice:     voiceMatch  ? voiceMatch[1].trim()  : '',
+        preset:    presetMatch ? presetMatch[1].trim()  : null,
+        file:      fileMatch   ? fileMatch[1].trim()   : '',
+        text:      textMatch   ? textMatch[1].trim()   : '',
       }
     })
     return { ok: true, entries }
-  } catch (e) {
+  } catch {
     return { ok: true, entries: [] }
   }
 })
@@ -180,24 +169,24 @@ ipcMain.handle('get-history', async () => {
 // ── Voices ────────────────────────────────────────────────────────────────────
 
 ipcMain.handle('list-voices', async () => {
-  const { code, stdout } = await runPython(['list-voices'])
-  if (code !== 0) return { ok: false, voices: [] }
-  // voice.py outputs fixed-width columns: NOM(30) VOICE_ID(30) CATEGORIE
-  const lines = stdout.trim().split('\n').slice(2).filter(Boolean)
-  const voices = lines
-    .map((line) => ({
-      name: line.slice(0, 30).trim(),
-      id: line.slice(30, 60).trim(),
-      category: line.slice(60).trim(),
-    }))
-    .filter((v) => v.name && v.id)
-  return { ok: true, voices }
+  try {
+    const client = getClient()
+    const { voices } = await client.voices.getAll()
+    return { ok: true, voices: voices.map(v => ({ name: v.name, id: v.voiceId, category: v.category })) }
+  } catch (e) {
+    return { ok: false, voices: [], error: e.message }
+  }
+})
+
+// ── Read file (for renderer-side Web Audio — bypasses file:// CORS in dev) ───
+
+ipcMain.handle('read-file', (_, filePath) => {
+  return readFileSync(filePath) // Buffer → serialized as Uint8Array to renderer
 })
 
 // ── Output folder ─────────────────────────────────────────────────────────────
 
 ipcMain.handle('open-output', async () => {
-  const { mkdirSync } = await import('fs')
   mkdirSync(OUTPUT_DIR, { recursive: true })
   shell.openPath(OUTPUT_DIR)
   return { ok: true }
@@ -206,23 +195,21 @@ ipcMain.handle('open-output', async () => {
 // ── Resolve absolute path (for renderer-side Web Audio playback) ─────────────
 
 ipcMain.handle('resolve-path', (_, filePath) => {
-  const absPath = filePath.startsWith('/') || /^[A-Za-z]:/.test(filePath)
+  return filePath.startsWith('/') || /^[A-Za-z]:/.test(filePath)
     ? filePath
-    : join(CWD, filePath)
-  return absPath
+    : join(OUTPUT_DIR, filePath)
 })
 
 // ── Audio playback (cross-platform) ──────────────────────────────────────────
 
 ipcMain.handle('play-file', async (_, filePath) => {
-  // filePath may be absolute (packaged) or relative (dev)
   const absPath = filePath.startsWith('/') || /^[A-Za-z]:/.test(filePath)
     ? filePath
-    : join(CWD, filePath)
+    : join(OUTPUT_DIR, filePath)
   if (process.platform === 'darwin') {
     spawn('afplay', [absPath], { detached: true }).unref()
   } else if (process.platform === 'win32') {
-    shell.openPath(absPath) // opens with default media player
+    shell.openPath(absPath)
   } else {
     spawn('mpv', ['--no-video', absPath], { detached: true }).unref()
   }
@@ -241,6 +228,17 @@ ipcMain.handle('set-api-key', (_, key) => {
   cfg.apiKey = key.trim()
   writeConfig(cfg)
   return { ok: true }
+})
+
+ipcMain.handle('verify-key', async (_, key) => {
+  try {
+    const client = new ElevenLabsClient({ apiKey: key.trim() })
+    const user = await client.user.get()
+    const sub = user.subscription
+    return { ok: true, tier: sub.tier, remaining: sub.character_limit - sub.character_count }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
 })
 
 // ── Window controls ───────────────────────────────────────────────────────────

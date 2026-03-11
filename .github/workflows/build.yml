@@ -19,37 +19,6 @@ jobs:
           cache: npm
           cache-dependency-path: app/package-lock.json
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Python deps + PyInstaller
-        run: |
-          python3 -m venv .venv
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install elevenlabs typer python-dotenv pyinstaller
-
-      - name: Build voice binary → app/dist-bin/voice
-        run: |
-          .venv/bin/pyinstaller --onefile --name voice \
-            --hidden-import elevenlabs \
-            --hidden-import elevenlabs.client \
-            --hidden-import elevenlabs.types \
-            --hidden-import httpx \
-            --hidden-import httpcore \
-            --hidden-import anyio \
-            --hidden-import anyio._backends._asyncio \
-            --hidden-import anyio._backends._trio \
-            --hidden-import certifi \
-            --hidden-import dotenv \
-            voice.py
-          mkdir -p app/dist-bin
-          cp dist/voice app/dist-bin/voice
-          chmod +x app/dist-bin/voice
-
-      - name: Create .env
-        run: echo "ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}" > .env
-
       - name: Install node deps
         working-directory: app
         run: npm ci
@@ -82,28 +51,6 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: app/package-lock.json
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Python deps + PyInstaller
-        shell: cmd
-        run: |
-          python -m venv .venv
-          .venv\Scripts\pip install --upgrade pip
-          .venv\Scripts\pip install elevenlabs typer python-dotenv pyinstaller
-
-      - name: Build voice binary → app/dist-bin/voice.exe
-        shell: cmd
-        run: |
-          .venv\Scripts\pyinstaller --onefile --name voice --hidden-import elevenlabs --hidden-import elevenlabs.client --hidden-import elevenlabs.types --hidden-import httpx --hidden-import httpcore --hidden-import anyio --hidden-import anyio._backends._asyncio --hidden-import anyio._backends._trio --hidden-import certifi --hidden-import dotenv voice.py
-          mkdir app\dist-bin
-          copy dist\voice.exe app\dist-bin\voice.exe
-
-      - name: Create .env
-        shell: bash
-        run: echo "ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}" > .env
 
       - name: Install node deps
         working-directory: app

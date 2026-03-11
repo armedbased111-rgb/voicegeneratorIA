@@ -1,6 +1,6 @@
 {
   "name": "veil",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "VEIL — Voice generator for rap production",
   "main": "out/main/index.js",
   "scripts": {
@@ -38,12 +38,6 @@
             "arm64"
           ]
         }
-      ],
-      "extraResources": [
-        {
-          "from": "dist-bin/voice",
-          "to": "voice"
-        }
       ]
     },
     "dmg": {
@@ -60,12 +54,6 @@
           "arch": [
             "x64"
           ]
-        }
-      ],
-      "extraResources": [
-        {
-          "from": "dist-bin/voice.exe",
-          "to": "voice.exe"
         }
       ]
     },
@@ -84,6 +72,7 @@
     "@react-three/fiber": "^9.5.0",
     "@types/three": "^0.183.1",
     "clsx": "^2.1.1",
+    "elevenlabs": "^1.59.0",
     "tailwind-merge": "^3.5.0",
     "three": "^0.183.2"
   },

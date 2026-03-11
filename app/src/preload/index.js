@@ -10,9 +10,11 @@ contextBridge.exposeInMainWorld('api', {
   listVoices: () => ipcRenderer.invoke('list-voices'),
   playFile: (path) => ipcRenderer.invoke('play-file', path),
   resolvePath: (path) => ipcRenderer.invoke('resolve-path', path),
+  readFile: (path) => ipcRenderer.invoke('read-file', path),
   openOutput: () => ipcRenderer.invoke('open-output'),
   getApiKey: () => ipcRenderer.invoke('get-api-key'),
   setApiKey: (key) => ipcRenderer.invoke('set-api-key', key),
+  verifyKey: (key) => ipcRenderer.invoke('verify-key', key),
   minimize: () => ipcRenderer.send('window-minimize'),
   close: () => ipcRenderer.send('window-close'),
 })
