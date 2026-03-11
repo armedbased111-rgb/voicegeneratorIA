@@ -8,7 +8,6 @@
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win"
   },
@@ -17,25 +16,18 @@
     "productName": "VoiceGeneratorIA",
     "copyright": "Copyright © 2026",
     "directories": {
-      "output": "dist",
+      "output": "release",
       "buildResources": "build"
     },
-    "files": [
-      "out/**/*",
-      "!out/renderer/assets/*.woff",
-      "out/renderer/assets/*.woff2",
-      "out/renderer/assets/*.css",
-      "out/renderer/assets/*.js",
-      "out/renderer/index.html"
-    ],
+    "files": ["out/**/*"],
     "extraResources": [
-      { "from": "../presets.json", "to": "presets.json" }
+      { "from": "resources/presets.json", "to": "presets.json" }
     ],
     "mac": {
       "category": "public.app-category.music",
       "target": [{ "target": "dmg", "arch": ["arm64"] }],
       "extraResources": [
-        { "from": "../dist-bin/voice", "to": "voice" }
+        { "from": "dist-bin/voice", "to": "voice" }
       ]
     },
     "dmg": {
@@ -45,7 +37,7 @@
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }],
       "extraResources": [
-        { "from": "../dist-bin/voice.exe", "to": "voice.exe" }
+        { "from": "dist-bin/voice.exe", "to": "voice.exe" }
       ]
     },
     "nsis": {

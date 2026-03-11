@@ -23,37 +23,41 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python dependencies + PyInstaller
+      - name: Install Python deps + PyInstaller
         run: |
           python3 -m venv .venv
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install elevenlabs typer python-dotenv pyinstaller
 
-      - name: Build voice binary (macOS)
+      - name: Build voice binary → app/dist-bin/voice
         run: |
           .venv/bin/pyinstaller --onefile --name voice voice.py
-          mkdir -p dist-bin
-          cp dist/voice dist-bin/voice
-          chmod +x dist-bin/voice
+          mkdir -p app/dist-bin
+          cp dist/voice app/dist-bin/voice
+          chmod +x app/dist-bin/voice
 
       - name: Create .env
         run: echo "ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}" > .env
 
-      - name: Install node dependencies
+      - name: Install node deps
         working-directory: app
         run: npm ci
 
-      - name: Build DMG
+      - name: electron-vite build
         working-directory: app
-        run: npm run dist:mac
+        run: npx electron-vite build
+
+      - name: electron-builder --mac
+        working-directory: app
+        run: npx electron-builder --mac --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          DEBUG: electron-builder
 
       - uses: actions/upload-artifact@v4
         with:
           name: VoiceGeneratorIA-mac
-          path: app/dist/*.dmg
+          path: app/release/*.dmg
           retention-days: 30
 
   build-win:
@@ -72,38 +76,42 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python dependencies + PyInstaller
+      - name: Install Python deps + PyInstaller
         shell: cmd
         run: |
           python -m venv .venv
           .venv\Scripts\pip install --upgrade pip
           .venv\Scripts\pip install elevenlabs typer python-dotenv pyinstaller
 
-      - name: Build voice binary (Windows)
+      - name: Build voice binary → app/dist-bin/voice.exe
         shell: cmd
         run: |
           .venv\Scripts\pyinstaller --onefile --name voice voice.py
-          mkdir dist-bin
-          copy dist\voice.exe dist-bin\voice.exe
+          mkdir app\dist-bin
+          copy dist\voice.exe app\dist-bin\voice.exe
 
       - name: Create .env
         shell: bash
         run: echo "ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}" > .env
 
-      - name: Install node dependencies
+      - name: Install node deps
         working-directory: app
         run: npm ci
 
-      - name: Build Windows installer
+      - name: electron-vite build
         working-directory: app
-        run: npm run dist:win
+        run: npx electron-vite build
+
+      - name: electron-builder --win
+        working-directory: app
+        run: npx electron-builder --win --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: electron-builder
 
       - uses: actions/upload-artifact@v4
         with:
           name: VoiceGeneratorIA-win
-          path: app/dist/*.exe
+          path: app/release/*.exe
           retention-days: 30
 
   release:
