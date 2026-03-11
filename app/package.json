@@ -1,7 +1,7 @@
 {
-  "name": "echo",
+  "name": "veil",
   "version": "0.2.0",
-  "description": "ECHO — Voice generator for rap production",
+  "description": "VEIL — Voice generator for rap production",
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -12,8 +12,8 @@
     "dist:win": "npm run build && electron-builder --win"
   },
   "build": {
-    "appId": "com.triplesept.echo",
-    "productName": "ECHO",
+    "appId": "com.triplesept.veil",
+    "productName": "VEIL",
     "copyright": "Copyright © 2026",
     "icon": "build/icon",
     "directories": {
@@ -32,7 +32,7 @@
       ]
     },
     "dmg": {
-      "title": "ECHO",
+      "title": "VEIL",
       "window": { "width": 540, "height": 380 }
     },
     "win": {
