@@ -50,7 +50,7 @@ export default function PresetEditor({ presetKey, presetData, onSave, onDelete, 
   return (
     <div
       className="flex flex-col z-50 px-5 py-4 gap-3"
-      style={{ position: 'fixed', inset: 0, background: '#F3F3F3' }}
+      style={{ position: 'fixed', inset: 0, background: 'var(--bg)' }}
     >
       <div className="flex items-center justify-between flex-shrink-0">
         <span className="text-[10px] font-medium text-ink/40 tracking-widest uppercase">
@@ -67,7 +67,7 @@ export default function PresetEditor({ presetKey, presetData, onSave, onDelete, 
         onChange={(e) => setName(e.target.value)}
         placeholder="preset name"
         readOnly={!isNew}
-        className={`w-full bg-white border border-border rounded-xl px-3 py-2 text-xs font-mono text-ink focus:outline-none focus:border-ink/20 placeholder:text-muted/40 flex-shrink-0 ${
+        className={`w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs font-mono text-ink focus:outline-none focus:border-ink/20 placeholder:text-muted/40 flex-shrink-0 ${
           !isNew ? 'opacity-50 cursor-default' : ''
         }`}
         spellCheck={false}
@@ -81,7 +81,7 @@ export default function PresetEditor({ presetKey, presetData, onSave, onDelete, 
           <select
             value={form.voice_id}
             onChange={(e) => set('voice_id', e.target.value)}
-            className="w-full bg-white border border-border rounded-xl px-3 py-2 text-xs font-mono text-ink focus:outline-none focus:border-ink/20"
+            className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs font-mono text-ink focus:outline-none focus:border-ink/20"
           >
             <option value="">— select voice —</option>
             {voices.map((v) => (
@@ -105,7 +105,7 @@ export default function PresetEditor({ presetKey, presetData, onSave, onDelete, 
         value={form.description}
         onChange={(e) => set('description', e.target.value)}
         placeholder="description (optional)"
-        className="w-full bg-white border border-border rounded-xl px-3 py-2 text-xs font-mono text-ink/60 focus:outline-none focus:border-ink/20 placeholder:text-muted/40 flex-shrink-0"
+        className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs font-mono text-ink/60 focus:outline-none focus:border-ink/20 placeholder:text-muted/40 flex-shrink-0"
         spellCheck={false}
       />
 

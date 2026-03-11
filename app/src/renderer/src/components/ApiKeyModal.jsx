@@ -38,12 +38,12 @@ export default function ApiKeyModal({ onSaved }) {
     'verify & save'
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#F3F3F3]/80 backdrop-blur-sm">
-      <div className="bg-white border border-[#E4E4E4] rounded-2xl p-6 w-[320px] flex flex-col gap-4 shadow-lg">
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-bg/80 backdrop-blur-sm">
+      <div className="bg-surface border border-border rounded-2xl p-6 w-[320px] flex flex-col gap-4 shadow-lg">
 
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] font-medium text-[#111] tracking-widest uppercase">ElevenLabs API Key</span>
-          <span className="text-[10px] text-[#A0A0A0] leading-relaxed">
+          <span className="text-[11px] font-medium text-ink tracking-widest uppercase">ElevenLabs API Key</span>
+          <span className="text-[10px] text-muted leading-relaxed">
             Your key is saved locally and never leaves your device.
             Get it at elevenlabs.io → Profile → API Keys.
           </span>
@@ -55,7 +55,7 @@ export default function ApiKeyModal({ onSaved }) {
           onChange={e => { setKey(e.target.value); setError(''); setStatus('idle'); setInfo(null) }}
           onKeyDown={e => e.key === 'Enter' && handleSave()}
           placeholder="sk_••••••••••••••••••••••"
-          className="w-full bg-[#F3F3F3] border border-[#E4E4E4] rounded-lg px-3 py-2 text-[11px] font-mono text-[#111] outline-none focus:border-[#AECBE8] transition-colors placeholder:text-[#C0C0C0]"
+          className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-[11px] font-mono text-ink outline-none focus:border-muted transition-colors placeholder:text-muted/40"
           autoFocus
           disabled={status === 'verifying' || status === 'valid'}
         />
@@ -73,7 +73,7 @@ export default function ApiKeyModal({ onSaved }) {
         <button
           onClick={handleSave}
           disabled={status === 'verifying' || status === 'valid' || !key.trim()}
-          className={`text-[#111] text-[10px] tracking-widest uppercase font-medium rounded-lg py-2 transition-colors disabled:opacity-40
+          className={`text-ink text-[10px] tracking-widest uppercase font-medium rounded-lg py-2 transition-colors disabled:opacity-40
             ${status === 'valid' ? 'bg-green-100' : 'bg-[#D8EAFF] hover:bg-[#AECBE8]'}`}
         >
           {label}

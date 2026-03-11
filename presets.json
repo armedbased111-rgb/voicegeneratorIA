@@ -1,33 +1,33 @@
 {
   "default": {
     "voice_id": "WeAAwKYcS06VmXw086yZ",
-    "stability": 0.40,
+    "stability": 0.4,
     "similarity": 0.05,
-    "style": 0.0,
+    "style": 0,
     "speed": 1.1,
     "description": "Victoria — warm & calm, legere rapide, neutre"
   },
   "dark": {
     "voice_id": "WeAAwKYcS06VmXw086yZ",
-    "stability": 0.20,
+    "stability": 0.2,
     "similarity": 0.05,
-    "style": 0.60,
+    "style": 0.6,
     "speed": 0.9,
     "description": "Victoria — version sombre, instable, tres expressive"
   },
   "narrator": {
     "voice_id": "WeAAwKYcS06VmXw086yZ",
     "stability": 0.65,
-    "similarity": 0.10,
-    "style": 0.10,
+    "similarity": 0.1,
+    "style": 0.1,
     "speed": 0.9,
     "description": "Victoria — narration posee, lente, froide"
   },
   "hook": {
     "voice_id": "WeAAwKYcS06VmXw086yZ",
-    "stability": 0.30,
+    "stability": 0.3,
     "similarity": 0.05,
-    "style": 0.40,
+    "style": 0.4,
     "speed": 1.1,
     "description": "Victoria — hook energique, legere instabilite"
   }

@@ -6,6 +6,7 @@ import * as THREE from "three"
 export function Orb({
   colors = ["#CADCFC", "#A0B9D1"],
   colorsRef,
+  settingsRef,
   resizeDebounce = 100,
   seed,
   agentState = null,
@@ -30,6 +31,7 @@ export function Orb({
         <Scene
           colors={colors}
           colorsRef={colorsRef}
+          settingsRef={settingsRef}
           seed={seed}
           agentState={agentState}
           volumeMode={volumeMode}
@@ -47,6 +49,7 @@ export function Orb({
 function Scene({
   colors,
   colorsRef,
+  settingsRef,
   seed,
   agentState,
   volumeMode,
@@ -160,9 +163,12 @@ function Scene({
     const targetSpeed = 0.1 + (1 - Math.pow(curOutRef.current - 1, 2)) * 0.9
     animSpeedRef.current += (targetSpeed - animSpeedRef.current) * 0.12
 
-    u.uAnimation.value += delta * animSpeedRef.current
-    u.uInputVolume.value = curInRef.current
-    u.uOutputVolume.value = curOutRef.current
+    const s = settingsRef?.current
+    const speedMult  = s?.speedMult  ?? 1.0
+    const intensity  = s?.intensity  ?? 1.0
+    u.uAnimation.value    += delta * animSpeedRef.current * speedMult
+    u.uInputVolume.value   = curInRef.current
+    u.uOutputVolume.value  = Math.min(1, curOutRef.current * intensity)
     u.uColor1.value.lerp(targetColor1Ref.current, 0.08)
     u.uColor2.value.lerp(targetColor2Ref.current, 0.08)
   })
@@ -430,7 +436,7 @@ void main() {
     color.rgb = 1.0 - (1.0 - color.rgb) * (1.0 - ringColor * totalRingAlpha);
 
     // Define colours to ramp against greyscale (could increase the amount of colours in the ramp)
-    vec3 color1 = vec3(0.0, 0.0, 0.0); // Black
+    vec3 color1 = mix(vec3(0.0, 0.0, 0.0), uColor1, uInverted * 0.4); // Dark tinted in dark mode
     vec3 color2 = uColor1; // Darker Color
     vec3 color3 = uColor2; // Lighter Color
     vec3 color4 = vec3(1.0, 1.0, 1.0); // White

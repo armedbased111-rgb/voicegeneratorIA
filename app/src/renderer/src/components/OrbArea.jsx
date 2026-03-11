@@ -1,15 +1,25 @@
 import { Orb } from '@/components/ui/ui/orb'
 import LiveWaveform from './LiveWaveform'
+import { useContainerSize } from '../hooks/useContainerSize'
 
-// Lighter periwinkle — more airy, blends with F3F3F3 background
 const ORB_COLORS = ["#D8EAFF", "#AECBE8"]
 
-export default function OrbArea({ orbState, status, lastPath, onPlay, playing, freqData, volumeRef }) {
-  const isGenerating = orbState === 'talking'
+export default function OrbArea({ orbState, status, lastPath, onPlay, playing, freqData, colorsRef, settingsRef }) {
+  const [containerRef, { width, height }] = useContainerSize()
+
+  const isGenerating  = orbState === 'talking'
   const activeOrbState = playing ? 'talking' : orbState
 
+  const orbSize  = Math.min(
+    height > 0 ? height * 0.55 : 220,
+    width  > 0 ? width  * 0.62 : 220,
+    300
+  )
+  const glowSize   = orbSize * 1.23
+  const waveHeight = Math.max(40, Math.min(64, height * 0.12))
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-3 select-none">
+    <div ref={containerRef} className="flex-1 flex flex-col items-center justify-center gap-3 select-none min-h-0">
 
       {/* Orb + glow */}
       <div className="relative flex items-center justify-center">
@@ -18,8 +28,8 @@ export default function OrbArea({ orbState, status, lastPath, onPlay, playing, f
         <div
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: 270,
-            height: 270,
+            width: glowSize,
+            height: glowSize,
             background: 'radial-gradient(circle, rgba(216,234,255,0.50) 0%, rgba(174,203,232,0.22) 50%, transparent 75%)',
             filter: `blur(${playing ? 32 : isGenerating ? 28 : 22}px)`,
             transform: `scale(${playing ? 1.14 : isGenerating ? 1.12 : 1})`,
@@ -27,11 +37,11 @@ export default function OrbArea({ orbState, status, lastPath, onPlay, playing, f
           }}
         />
 
-        {/* Orb — opacity blends with #F3F3F3 background */}
+        {/* Orb */}
         <div
           style={{
-            width: 220,
-            height: 220,
+            width: orbSize,
+            height: orbSize,
             opacity: playing ? 0.88 : isGenerating ? 0.84 : 0.78,
             filter: `drop-shadow(0 6px ${playing ? 36 : isGenerating ? 32 : 20}px rgba(174,203,232,${playing ? 0.45 : isGenerating ? 0.38 : 0.25}))`,
             transform: `scale(${playing ? 1.04 : isGenerating ? 1.06 : 1})`,
@@ -41,6 +51,8 @@ export default function OrbArea({ orbState, status, lastPath, onPlay, playing, f
           <Orb
             agentState={activeOrbState}
             colors={ORB_COLORS}
+            colorsRef={colorsRef}
+            settingsRef={settingsRef}
           />
         </div>
       </div>
@@ -55,7 +67,7 @@ export default function OrbArea({ orbState, status, lastPath, onPlay, playing, f
           pointerEvents: playing ? 'auto' : 'none',
         }}
       >
-        <LiveWaveform freqData={freqData} height={52} />
+        <LiveWaveform freqData={freqData} height={waveHeight} />
       </div>
 
       {/* Status / actions */}

@@ -1,6 +1,6 @@
 {
   "name": "veil",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "VEIL — Voice generator for rap production",
   "main": "out/main/index.js",
   "scripts": {
@@ -27,6 +27,14 @@
       {
         "from": "resources/presets.json",
         "to": "presets.json"
+      },
+      {
+        "from": "build/tray-icon.png",
+        "to": "tray-icon.png"
+      },
+      {
+        "from": "build/tray-icon@2x.png",
+        "to": "tray-icon@2x.png"
       }
     ],
     "mac": {

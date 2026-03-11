@@ -1,16 +1,31 @@
-export default function TitleBar({ showHistory, onToggleHistory, onSettings }) {
+export default function TitleBar({ showHistory, onToggleHistory, onSettings, onOrbSettings, showOrbSettings, dark, onToggleTheme }) {
   return (
     <div
       className="flex items-center justify-between px-4 h-11 flex-shrink-0"
       style={{ WebkitAppRegion: 'drag' }}
     >
-      <span className="text-[10px] font-medium text-ink/30 tracking-widest uppercase">
+      <span
+        onClick={onOrbSettings}
+        style={{ WebkitAppRegion: 'no-drag' }}
+        className={`text-[10px] font-medium tracking-widest uppercase cursor-pointer transition-colors ${
+          showOrbSettings ? 'text-ink/70' : 'text-ink/30 hover:text-ink/60'
+        }`}
+        title="Orb settings"
+      >
         VEIL
       </span>
+
       <div
         className="flex items-center gap-3"
         style={{ WebkitAppRegion: 'no-drag' }}
       >
+        <button
+          onClick={onToggleTheme}
+          className="text-[10px] font-medium tracking-widest uppercase text-muted/50 hover:text-ink/60 transition-colors"
+          title={dark ? 'Switch to light' : 'Switch to dark'}
+        >
+          {dark ? 'light' : 'dark'}
+        </button>
         <button
           onClick={onSettings}
           className="text-[10px] font-medium tracking-widest uppercase text-muted/40 hover:text-ink/40 transition-colors"

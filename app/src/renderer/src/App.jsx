@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import TitleBar from './components/TitleBar'
 import OrbArea from './components/OrbArea'
+import OrbSettingsPanel from './components/OrbSettingsPanel'
 import ChatInput from './components/ChatInput'
 import PresetPills from './components/PresetPills'
 import FilenameInput from './components/FilenameInput'
@@ -8,20 +9,25 @@ import HistoryPanel from './components/HistoryPanel'
 import PresetEditor from './components/PresetEditor'
 import ApiKeyModal from './components/ApiKeyModal'
 import { useAudioPlayer } from './hooks/useAudioPlayer'
+import { useOrbSettings } from './hooks/useOrbSettings'
+import { useTheme } from './hooks/useTheme'
 
 export default function App() {
-  const [text, setText] = useState('')
-  const [preset, setPreset] = useState('default')
-  const [filename, setFilename] = useState('')
-  const [status, setStatus] = useState({ state: 'idle', message: '' })
-  const [quota, setQuota] = useState(null)
-  const [lastPath, setLastPath] = useState(null)
-  const [presets, setPresets] = useState({})
+  const [text, setText]               = useState('')
+  const [preset, setPreset]           = useState('default')
+  const [filename, setFilename]       = useState('')
+  const [status, setStatus]           = useState({ state: 'idle', message: '' })
+  const [quota, setQuota]             = useState(null)
+  const [lastPath, setLastPath]       = useState(null)
+  const [presets, setPresets]         = useState({})
   const [showHistory, setShowHistory] = useState(false)
   const [editingPreset, setEditingPreset] = useState(null)
-  const [showApiKey, setShowApiKey] = useState(false)
+  const [showApiKey, setShowApiKey]   = useState(false)
+  const [showOrbSettings, setShowOrbSettings] = useState(false)
 
-  const { play, stop, playing, freqData, volumeRef } = useAudioPlayer()
+  const { play, stop, playing, freqData } = useAudioPlayer()
+  const { settings, update, colorsRef, settingsRef } = useOrbSettings()
+  const { dark, toggle: toggleTheme } = useTheme()
 
   useEffect(() => {
     window.api.getApiKey().then((res) => { if (!res.hasKey) setShowApiKey(true) })
@@ -48,7 +54,7 @@ export default function App() {
       setStatus({ state: 'success', message: '' })
       setLastPath(res.path)
       window.api.getQuota().then((q) => { if (q.ok) setQuota(q) })
-      play(res.path) // autoplay
+      play(res.path)
     } else {
       const msg = res.error?.split('\n').pop()?.trim() || 'generation failed'
       setStatus({ state: 'error', message: msg })
@@ -81,10 +87,26 @@ export default function App() {
     : null
 
   return (
-    <div className="flex flex-col h-screen bg-[#F3F3F3] font-geist relative">
-      <TitleBar showHistory={showHistory} onToggleHistory={() => setShowHistory(!showHistory)} onSettings={() => setShowApiKey(true)} />
+    <div className="flex flex-col h-screen bg-bg font-geist relative overflow-hidden transition-colors duration-200">
+      <TitleBar
+        showHistory={showHistory}
+        onToggleHistory={() => setShowHistory(!showHistory)}
+        onSettings={() => setShowApiKey(true)}
+        onOrbSettings={() => setShowOrbSettings(v => !v)}
+        showOrbSettings={showOrbSettings}
+        dark={dark}
+        onToggleTheme={toggleTheme}
+      />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Orb settings slide-in panel */}
+      <OrbSettingsPanel
+        open={showOrbSettings}
+        settings={settings}
+        onUpdate={update}
+        onClose={() => setShowOrbSettings(false)}
+      />
+
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         {showHistory ? (
           <HistoryPanel />
         ) : (
@@ -96,10 +118,11 @@ export default function App() {
               onPlay={handlePlay}
               playing={playing}
               freqData={freqData}
-              volumeRef={volumeRef}
+              colorsRef={colorsRef}
+              settingsRef={settingsRef}
             />
 
-            <div className="px-4 pb-4 flex flex-col gap-2">
+            <div className="px-4 pb-4 flex flex-col gap-2 w-full max-w-2xl mx-auto">
               <PresetPills
                 presets={presets}
                 selected={preset}

@@ -7,8 +7,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Space-separated RGB tuples — required for Tailwind opacity modifiers */
 :root {
-  --foreground: #111111;
+  --bg:      243 243 243;   /* #F3F3F3 */
+  --surface: 255 255 255;   /* #FFFFFF */
+  --border:  228 228 228;   /* #E4E4E4 */
+  --muted:   160 160 160;   /* #A0A0A0 */
+  --ink:     17  17  17;    /* #111111 */
+}
+
+.dark {
+  --bg:      17  17  17;    /* #111111 */
+  --surface: 28  28  28;    /* #1C1C1C */
+  --border:  42  42  42;    /* #2A2A2A */
+  --muted:   85  85  85;    /* #555555 */
+  --ink:     240 240 240;   /* #F0F0F0 */
 }
 
 * {
@@ -18,18 +31,12 @@
 
 body {
   margin: 0;
-  background: #F3F3F3;
+  background: rgb(var(--bg));
   font-family: 'Geist', sans-serif;
   overflow: hidden;
+  transition: background 0.2s ease;
 }
 
-textarea::-webkit-scrollbar {
-  width: 4px;
-}
-textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-textarea::-webkit-scrollbar-thumb {
-  background: #D0D0D0;
-  border-radius: 2px;
-}
+textarea::-webkit-scrollbar { width: 4px; }
+textarea::-webkit-scrollbar-track { background: transparent; }
+textarea::-webkit-scrollbar-thumb { background: rgb(var(--border)); border-radius: 2px; }

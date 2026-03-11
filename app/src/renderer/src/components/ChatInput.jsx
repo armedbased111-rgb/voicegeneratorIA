@@ -13,7 +13,7 @@ export default function ChatInput({ value, onChange, onGenerate, loading, disabl
   }
 
   function handleKeyDown(e) {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       if (!disabled && !loading) onGenerate()
     }
@@ -21,7 +21,7 @@ export default function ChatInput({ value, onChange, onGenerate, loading, disabl
 
   return (
     <div
-      className="relative bg-white border border-border rounded-xl overflow-hidden transition-colors focus-within:border-ink/20"
+      className="relative bg-surface border border-border rounded-xl overflow-hidden transition-colors focus-within:border-ink/20"
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
     >
@@ -30,7 +30,7 @@ export default function ChatInput({ value, onChange, onGenerate, loading, disabl
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="enter lyrics… or drop a .txt"
+        placeholder="enter text… ↵ generate  shift+↵ new line"
         className="w-full bg-transparent text-ink text-sm resize-none px-4 pt-3 pb-10 min-h-[88px] max-h-[160px] outline-none placeholder:text-muted/40 font-mono leading-relaxed"
         spellCheck={false}
       />

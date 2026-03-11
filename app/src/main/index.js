@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } from 'electron'
 import { join } from 'path'
 import { spawn } from 'child_process'
 import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync, createWriteStream } from 'fs'
@@ -12,12 +12,18 @@ const PRESETS_JSON = app.isPackaged ? join(RES_ROOT, 'presets.json') : join(DEV_
 const OUTPUT_DIR   = app.isPackaged ? join(app.getPath('userData'), 'output') : join(DEV_ROOT, 'output')
 const HISTORY_LOG  = app.isPackaged ? join(app.getPath('userData'), 'history.log') : join(DEV_ROOT, 'history.log')
 
+let mainWin = null
+let miniWin = null
+let tray    = null
+
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWin = new BrowserWindow({
     width: 500,
     height: 680,
+    minWidth: 400,
+    minHeight: 560,
     frame: false,
-    resizable: false,
+    resizable: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -28,10 +34,96 @@ function createWindow() {
   })
 
   if (process.env['ELECTRON_RENDERER_URL']) {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
-    win.webContents.openDevTools({ mode: 'detach' })
+    mainWin.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    mainWin.webContents.openDevTools({ mode: 'detach' })
   } else {
-    win.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWin.loadFile(join(__dirname, '../renderer/index.html'))
+  }
+
+  // Hide to tray instead of quitting when closed
+  mainWin.on('close', (e) => {
+    if (!app.isQuitting) {
+      e.preventDefault()
+      mainWin.hide()
+    }
+  })
+}
+
+function createTray() {
+  const base = app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'build')
+  const icon1x = join(base, 'tray-icon.png')
+  const icon2x = join(base, 'tray-icon@2x.png')
+
+  let icon = nativeImage.createFromPath(icon1x)
+  if (icon.isEmpty()) icon = nativeImage.createFromPath(icon2x)
+
+  // Resize first, then set template (order matters on macOS)
+  const sized = icon.isEmpty() ? icon : icon.resize({ width: 16, height: 16 })
+  if (process.platform === 'darwin') sized.setTemplateImage(true)
+
+  tray = new Tray(sized)
+  tray.setToolTip('VEIL')
+
+  const menu = Menu.buildFromTemplate([
+    { label: 'Open VEIL',  click: () => { mainWin?.show(); mainWin?.focus() } },
+    { label: 'Mini mode',  click: () => toggleMiniWin() },
+    { type: 'separator' },
+    { label: 'Quit',       click: () => { app.isQuitting = true; app.quit() } },
+  ])
+  tray.setContextMenu(menu)
+  tray.on('click', () => toggleMiniWin())
+}
+
+function createMiniWin() {
+  const trayBounds = tray.getBounds()
+  const x = Math.round(trayBounds.x + trayBounds.width / 2 - 170)
+  const y = process.platform === 'darwin'
+    ? trayBounds.y + trayBounds.height + 4
+    : trayBounds.y - 220 - 4
+
+  miniWin = new BrowserWindow({
+    width: 340,
+    height: 220,
+    x,
+    y,
+    frame: false,
+    resizable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    type: process.platform === 'darwin' ? 'panel' : 'toolbar',
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+    backgroundColor: '#F3F3F3',
+  })
+
+  if (process.env['ELECTRON_RENDERER_URL']) {
+    miniWin.loadURL(process.env['ELECTRON_RENDERER_URL'] + '#mini')
+  } else {
+    miniWin.loadFile(join(__dirname, '../renderer/index.html'), { hash: 'mini' })
+  }
+
+  miniWin.on('blur',   () => miniWin?.hide())
+  miniWin.on('closed', () => { miniWin = null })
+}
+
+function toggleMiniWin() {
+  if (!miniWin || miniWin.isDestroyed()) {
+    createMiniWin()
+    return
+  }
+  if (miniWin.isVisible()) {
+    miniWin.hide()
+  } else {
+    const b = tray.getBounds()
+    const x = Math.round(b.x + b.width / 2 - 170)
+    const y = process.platform === 'darwin' ? b.y + b.height + 4 : b.y - 220 - 4
+    miniWin.setPosition(x, y)
+    miniWin.show()
+    miniWin.focus()
   }
 }
 
@@ -251,15 +343,28 @@ ipcMain.on('window-close', () => {
   BrowserWindow.getFocusedWindow()?.close()
 })
 
+ipcMain.on('open-main-window', () => {
+  mainWin?.show()
+  mainWin?.focus()
+  miniWin?.hide()
+})
+
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
   createWindow()
+  createTray()
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (mainWin) { mainWin.show(); mainWin.focus() }
+    else createWindow()
   })
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  // Keep alive via tray — only quit explicitly
+  if (!tray && process.platform !== 'darwin') app.quit()
+})
+
+app.on('before-quit', () => {
+  app.isQuitting = true
 })

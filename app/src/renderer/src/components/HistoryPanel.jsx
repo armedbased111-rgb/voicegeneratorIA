@@ -52,7 +52,7 @@ export default function HistoryPanel() {
         {entries.map((entry, i) => (
           <div
             key={i}
-            className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2.5"
+            className="flex items-center gap-2 bg-surface border border-border rounded-xl px-3 py-2.5"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">

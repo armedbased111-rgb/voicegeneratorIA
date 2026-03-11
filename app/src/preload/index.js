@@ -17,4 +17,5 @@ contextBridge.exposeInMainWorld('api', {
   verifyKey: (key) => ipcRenderer.invoke('verify-key', key),
   minimize: () => ipcRenderer.send('window-minimize'),
   close: () => ipcRenderer.send('window-close'),
+  openMain: () => ipcRenderer.send('open-main-window'),
 })
