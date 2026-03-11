@@ -8,8 +8,8 @@ export default {
         mono: ['Geist Mono', 'monospace'],
       },
       colors: {
-        surface: '#F3F3F3',
-        border: '#E0E0E0',
+        surface: '#FFFFFF',
+        border: '#E4E4E4',
         muted: '#A0A0A0',
         ink: '#111111',
       }

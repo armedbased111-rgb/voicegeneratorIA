@@ -2,16 +2,16 @@ export default function PresetPills({ presets, selected, onChange, onEdit, onNew
   const keys = Object.keys(presets)
 
   return (
-    <div className="flex gap-2 flex-shrink-0 flex-wrap items-center">
+    <div className="flex gap-1.5 flex-shrink-0 flex-wrap items-center">
       {keys.map((key) => (
         <div key={key} className="relative group">
           <button
             onClick={() => onChange(key)}
             title={presets[key]?.description || key}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+            className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wide transition-all ${
               selected === key
                 ? 'bg-ink text-white pr-6'
-                : 'bg-border text-ink/60 hover:bg-ink/10 pr-6'
+                : 'bg-white border border-border text-ink/50 hover:border-ink/20 hover:text-ink/80 pr-6'
             }`}
           >
             {key}
@@ -32,7 +32,7 @@ export default function PresetPills({ presets, selected, onChange, onEdit, onNew
       <button
         onClick={onNew}
         title="New preset"
-        className="w-6 h-6 rounded-full bg-border text-ink/40 hover:bg-ink/10 hover:text-ink flex items-center justify-center text-sm leading-none transition-all"
+        className="w-6 h-6 rounded-full bg-white border border-border text-ink/30 hover:border-ink/20 hover:text-ink flex items-center justify-center text-sm leading-none transition-all"
       >
         +
       </button>

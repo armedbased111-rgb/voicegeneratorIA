@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import TitleBar from './components/TitleBar'
-import TextArea from './components/TextArea'
+import OrbArea from './components/OrbArea'
+import ChatInput from './components/ChatInput'
 import PresetPills from './components/PresetPills'
 import FilenameInput from './components/FilenameInput'
-import GenerateButton from './components/GenerateButton'
-import StatusBar from './components/StatusBar'
 import HistoryPanel from './components/HistoryPanel'
 import PresetEditor from './components/PresetEditor'
+import { useAudioPlayer } from './hooks/useAudioPlayer'
 
 export default function App() {
   const [text, setText] = useState('')
@@ -17,24 +17,23 @@ export default function App() {
   const [lastPath, setLastPath] = useState(null)
   const [presets, setPresets] = useState({})
   const [showHistory, setShowHistory] = useState(false)
-  const [editingPreset, setEditingPreset] = useState(null) // null | preset key | '__new__'
+  const [editingPreset, setEditingPreset] = useState(null)
+
+  const { play, stop, playing, freqData, volumeRef } = useAudioPlayer()
 
   useEffect(() => {
-    window.api.getQuota().then((res) => {
-      if (res.ok) setQuota(res)
-    })
+    window.api.getQuota().then((res) => { if (res.ok) setQuota(res) })
     loadPresets()
   }, [])
 
   function loadPresets() {
-    window.api.getPresets().then((res) => {
-      if (res.ok) setPresets(res.presets)
-    })
+    window.api.getPresets().then((res) => { if (res.ok) setPresets(res.presets) })
   }
 
   async function handleGenerate() {
     if (!text.trim()) return
-    setStatus({ state: 'loading', message: 'generating...' })
+    stop()
+    setStatus({ state: 'loading', message: '' })
 
     const res = await window.api.generate({
       text: text.trim(),
@@ -43,13 +42,19 @@ export default function App() {
     })
 
     if (res.ok) {
-      setStatus({ state: 'success', message: `saved → ${res.path}` })
+      setStatus({ state: 'success', message: '' })
       setLastPath(res.path)
       window.api.getQuota().then((q) => { if (q.ok) setQuota(q) })
+      play(res.path) // autoplay
     } else {
       const msg = res.error?.split('\n').pop()?.trim() || 'generation failed'
       setStatus({ state: 'error', message: msg })
     }
+  }
+
+  function handlePlay(path) {
+    if (!path) { stop(); return }
+    play(path)
   }
 
   async function handleSavePreset(name, presetData) {
@@ -65,32 +70,56 @@ export default function App() {
     setEditingPreset(null)
   }
 
+  const orbState = status.state === 'loading' ? 'talking'
+    : status.state === 'success' ? 'thinking'
+    : null
+
   return (
-    <div className="flex flex-col h-screen bg-surface font-geist relative">
+    <div className="flex flex-col h-screen bg-[#F3F3F3] font-geist relative">
       <TitleBar showHistory={showHistory} onToggleHistory={() => setShowHistory(!showHistory)} />
-      <div className="flex flex-col flex-1 px-5 pb-4 gap-3 overflow-hidden">
+
+      <div className="flex-1 flex flex-col overflow-hidden">
         {showHistory ? (
           <HistoryPanel />
         ) : (
           <>
-            <TextArea value={text} onChange={setText} quota={quota} />
-            <PresetPills
-              presets={presets}
-              selected={preset}
-              onChange={setPreset}
-              onEdit={(key) => setEditingPreset(key)}
-              onNew={() => setEditingPreset('__new__')}
+            <OrbArea
+              orbState={orbState}
+              status={status}
+              lastPath={lastPath}
+              onPlay={handlePlay}
+              playing={playing}
+              freqData={freqData}
+              volumeRef={volumeRef}
             />
-            <FilenameInput value={filename} onChange={setFilename} />
-            <GenerateButton
-              onClick={handleGenerate}
-              disabled={status.state === 'loading' || !text.trim()}
-              loading={status.state === 'loading'}
-            />
+
+            <div className="px-4 pb-4 flex flex-col gap-2">
+              <PresetPills
+                presets={presets}
+                selected={preset}
+                onChange={setPreset}
+                onEdit={(key) => setEditingPreset(key)}
+                onNew={() => setEditingPreset('__new__')}
+              />
+              <ChatInput
+                value={text}
+                onChange={setText}
+                onGenerate={handleGenerate}
+                loading={status.state === 'loading'}
+                disabled={status.state === 'loading' || !text.trim()}
+              />
+              <div className="flex items-center justify-between px-1">
+                <FilenameInput value={filename} onChange={setFilename} />
+                {quota && (
+                  <span className="text-[10px] font-mono text-muted/50 tabular-nums flex-shrink-0">
+                    {quota.remaining.toLocaleString()} ch.
+                  </span>
+                )}
+              </div>
+            </div>
           </>
         )}
       </div>
-      <StatusBar status={status} quota={quota} lastPath={lastPath} />
 
       {editingPreset !== null && (
         <PresetEditor

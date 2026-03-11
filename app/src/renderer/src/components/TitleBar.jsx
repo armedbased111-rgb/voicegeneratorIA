@@ -4,7 +4,7 @@ export default function TitleBar({ showHistory, onToggleHistory }) {
       className="flex items-center justify-between px-4 h-11 flex-shrink-0"
       style={{ WebkitAppRegion: 'drag' }}
     >
-      <span className="text-[10px] font-medium text-ink/40 tracking-widest uppercase">
+      <span className="text-[10px] font-medium text-ink/30 tracking-widest uppercase">
         VEIL
       </span>
       <div
@@ -14,7 +14,7 @@ export default function TitleBar({ showHistory, onToggleHistory }) {
         <button
           onClick={onToggleHistory}
           className={`text-[10px] font-medium tracking-widest uppercase transition-colors ${
-            showHistory ? 'text-ink' : 'text-muted/50 hover:text-ink/50'
+            showHistory ? 'text-ink/70' : 'text-muted/40 hover:text-ink/40'
           }`}
           title="Toggle history"
         >

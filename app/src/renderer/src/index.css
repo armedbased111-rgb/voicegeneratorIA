@@ -7,6 +7,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --foreground: #111111;
+}
+
 * {
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
@@ -17,4 +21,15 @@ body {
   background: #F3F3F3;
   font-family: 'Geist', sans-serif;
   overflow: hidden;
+}
+
+textarea::-webkit-scrollbar {
+  width: 4px;
+}
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+textarea::-webkit-scrollbar-thumb {
+  background: #D0D0D0;
+  border-radius: 2px;
 }

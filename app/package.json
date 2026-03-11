@@ -20,25 +20,53 @@
       "output": "release",
       "buildResources": "build"
     },
-    "files": ["out/**/*"],
+    "files": [
+      "out/**/*"
+    ],
     "extraResources": [
-      { "from": "resources/presets.json", "to": "presets.json" }
+      {
+        "from": "resources/presets.json",
+        "to": "presets.json"
+      }
     ],
     "mac": {
       "category": "public.app-category.music",
-      "target": [{ "target": "dmg", "arch": ["arm64"] }],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
       "extraResources": [
-        { "from": "dist-bin/voice", "to": "voice" }
+        {
+          "from": "dist-bin/voice",
+          "to": "voice"
+        }
       ]
     },
     "dmg": {
       "title": "VEIL",
-      "window": { "width": 540, "height": 380 }
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "extraResources": [
-        { "from": "dist-bin/voice.exe", "to": "voice.exe" }
+        {
+          "from": "dist-bin/voice.exe",
+          "to": "voice.exe"
+        }
       ]
     },
     "nsis": {
@@ -49,8 +77,15 @@
     }
   },
   "dependencies": {
+    "@elevenlabs/react": "^0.14.2",
     "@fontsource/geist": "^5.0.0",
-    "@fontsource/geist-mono": "^5.0.0"
+    "@fontsource/geist-mono": "^5.0.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@types/three": "^0.183.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.5.0",
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
@@ -59,8 +94,8 @@
     "electron-builder": "^25.1.8",
     "electron-vite": "^3.0.0",
     "postcss": "^8.5.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "tailwindcss": "^3.4.17"
   }
 }

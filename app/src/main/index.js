@@ -27,7 +27,7 @@ const VOICE_ARGS_PREFIX = app.isPackaged
 function createWindow() {
   const win = new BrowserWindow({
     width: 500,
-    height: 600,
+    height: 680,
     frame: false,
     resizable: false,
     webPreferences: {
@@ -190,6 +190,15 @@ ipcMain.handle('open-output', async () => {
   mkdirSync(OUTPUT_DIR, { recursive: true })
   shell.openPath(OUTPUT_DIR)
   return { ok: true }
+})
+
+// ── Resolve absolute path (for renderer-side Web Audio playback) ─────────────
+
+ipcMain.handle('resolve-path', (_, filePath) => {
+  const absPath = filePath.startsWith('/') || /^[A-Za-z]:/.test(filePath)
+    ? filePath
+    : join(CWD, filePath)
+  return absPath
 })
 
 // ── Audio playback (cross-platform) ──────────────────────────────────────────

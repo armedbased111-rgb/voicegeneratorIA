@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('api', {
   getHistory: () => ipcRenderer.invoke('get-history'),
   listVoices: () => ipcRenderer.invoke('list-voices'),
   playFile: (path) => ipcRenderer.invoke('play-file', path),
+  resolvePath: (path) => ipcRenderer.invoke('resolve-path', path),
   openOutput: () => ipcRenderer.invoke('open-output'),
   minimize: () => ipcRenderer.send('window-minimize'),
   close: () => ipcRenderer.send('window-close'),
