@@ -31,7 +31,18 @@ jobs:
 
       - name: Build voice binary → app/dist-bin/voice
         run: |
-          .venv/bin/pyinstaller --onefile --name voice --collect-all elevenlabs --collect-all httpx --hidden-import anyio --hidden-import anyio._backends._asyncio --hidden-import anyio._backends._trio --hidden-import certifi --hidden-import dotenv voice.py
+          .venv/bin/pyinstaller --onefile --name voice \
+            --hidden-import elevenlabs \
+            --hidden-import elevenlabs.client \
+            --hidden-import elevenlabs.types \
+            --hidden-import httpx \
+            --hidden-import httpcore \
+            --hidden-import anyio \
+            --hidden-import anyio._backends._asyncio \
+            --hidden-import anyio._backends._trio \
+            --hidden-import certifi \
+            --hidden-import dotenv \
+            voice.py
           mkdir -p app/dist-bin
           cp dist/voice app/dist-bin/voice
           chmod +x app/dist-bin/voice
@@ -86,7 +97,7 @@ jobs:
       - name: Build voice binary → app/dist-bin/voice.exe
         shell: cmd
         run: |
-          .venv\Scripts\pyinstaller --onefile --name voice --collect-all elevenlabs --collect-all httpx --hidden-import anyio --hidden-import anyio._backends._asyncio --hidden-import anyio._backends._trio --hidden-import certifi --hidden-import dotenv voice.py
+          .venv\Scripts\pyinstaller --onefile --name voice --hidden-import elevenlabs --hidden-import elevenlabs.client --hidden-import elevenlabs.types --hidden-import httpx --hidden-import httpcore --hidden-import anyio --hidden-import anyio._backends._asyncio --hidden-import anyio._backends._trio --hidden-import certifi --hidden-import dotenv voice.py
           mkdir app\dist-bin
           copy dist\voice.exe app\dist-bin\voice.exe
 
