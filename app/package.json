@@ -1,6 +1,6 @@
 {
   "name": "veil",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "VEIL — Voice generator for rap production",
   "main": "out/main/index.js",
   "scripts": {
